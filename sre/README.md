@@ -38,7 +38,22 @@
 - implement progressive rollouts
 - rollback changes safely and quickly
 # Production environment at Google, from SRE point of view
-- google uses `borg` a cluster manager 
+- google uses `borg` a cluster manager which is a predecessor to kubernetes
+- every server has an HTTP server that provides diagnostics and statistics for a given task.
+## Workflows
+- only few groups have their own repos
+- most of the code is in a single repo
+- fixes are submitted as CL (change list) and reviewed by other engineers
+## Shakespeare: a sample service
+- 2 part system
+    - batch component that reads all texts, create an index and writes to Bigtable. Job runs once or very infrequently
+    - app frontend that handles end-user requests. this service is always up 
+- batch component is a MapReduce consists of 
+    - mapping phase - read text and spliuts into words
+    - shuffling phase - sorts tuples by word
+    - reducing phase - tuple of (word, list of locations) is written to Bigtable
+## Life of a request 
+
 # sre workbook
 - https://sre.google/workbook/table-of-contents/
 
