@@ -76,10 +76,58 @@ kubectl get svc kubernetes -n default
 k8s edit deployment -n myapp myapp-deployment
 ```
 
-```
 ## Todo
 - [ ] setup ingress for argocd UI 
 ## port, targetPort and nodePort
 - port: the port that the service exposes
 - targetPort: the port that the pod exposes
 - nodePort: the port that the node exposes
+
+
+## ArgoCD best practices
+1. 1 ArgoCD per cluster
+- Pros:
+  - secure
+  - easier to scale
+- Cons:
+  - no single control plane
+  - management nightmare
+2. 1 ArgoCD for all clusters
+- Pros:
+  - single control plane
+  - easier to manage
+- Cons:
+  - SPOF 
+  - security concerns
+  - scalability challenges as ArgoCD needs to process events from all clusters
+3. 1 ArgoCD per Org/Business Unit
+- Pros:
+  - single control plane
+  - easier to manage
+- Cons:
+  - management challenges 
+## ArgoCD for ArgoCD ? 
+- Kustomize for last mile config
+
+## Waves in Kustomize
+- waves for release candidate, stable and main
+# Application Controller - heart of ArgoCD
+- runs multiple workers which processes applications sequentially 
+- can increase the no. of workers with `controller.status.processes` in the configmap
+- increasing the no. of workers will increase CPU and memory usage
+- run multiple controller with sharding feature
+- sharding is enabled by setting `controller.shard` in the configmap
+  - shard by cluster
+  - apply a patch to controller application 
+## ArgoCD repo server
+- not everyone uses yaml
+- config management tools use CPU and memory
+- manifests are cached aggressively
+- have enough repo server replicas to handle "spikes" 
+
+## Mono repo
+- has lot of yaml files
+- when a commit pushes, argocd just regenerates the manifests for all the yaml
+- leverage webhook and special annotation to re-use previously cached manifests
+- limit parallelism as too much memory and cpu is used
+- use "reposerver.parrallelism" to limit the no. of parallelism
