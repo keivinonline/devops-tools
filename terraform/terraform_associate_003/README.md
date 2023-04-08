@@ -67,6 +67,88 @@ terraform {
 - tf will update state file version if required and warn if not compatible
 - updating state file version is 1 way (i.e. cannot downgrade)
 ### Providers
+- interact with remote APIs
+- each provider adds a set of resources types and/or data sources for TF to manage
+- TF CLI finds and installs provides when init is done on a directory
+- use `plugin_cache_dir` to save time and bandwidth when running `terraform init` locally or CICD
+- can use with `dependency_lock_file` and commit to Git to ensure consistency
+### How terraform works with plugins
+- terraform consists of 
+    - core
+    - plugins
+- TF uses RPC to communicate with plugins
+1. TF core
+- statically compiled binary in Go
+2. TF plugins
+- written in Go and invoked by TF core over RPC
+3. Responsibilities of Provider Plugins
+- initialize libraries to make API calls
+- authenticate with infa provider
+- define resources that map to specific services
+4. Selecting plugins
+- after running terraform init
+- saves into `.terraform/providers/` directory
+5. upgrading plugins
+- use `terraform init -upgrade` to upgrade plugins
+- only applicable to the `.terraform/providers/` directory
+### Provider Configuration
+- must be in root module 
+```hcl
+// becomes the default configuration for the provider
+provider "aws"{
+    region = "ap-southeast-1"
+}
+provider "aws" {
+    alias = "west"
+    region = "us-west-2"
+}
+// to use
+terraform {
+    required_providers {
+        aws = {
+            source = "hashicorp/aws"
+            configuration_aliases = [aws.west]
+        }
+    }
+}
+// selecting alternate provider config
+resource " aws_instances" "foo" {
+    provider = aws.west
+}
+// for child modules
+module "aws_vpc" {
+    source = "./aws_vpc"
+    providers = {
+        aws = aws.west
+    }
+}
+```
+#### Dependency Lock File
+- introduced in version 0.14
+- `terraform.lock.hcl`
+    - contains a list of all providers and their versions
+- should check this file into GIT
+- only track provider versions and NOT module versions 
+1. lock file location
+- belongs to the configuration as a whole 
+- `terraform.lock.hcl` is updated only when performing init
+2. dependency installation behavior
+- check for version recorded in lock file first and reuse
+  - can override with `terraform init -upgrade` flag
+- else will get latest version that matches the constraint
+- `terraform init` will warn if any changes are made to the lock file
+- `h1` and `zh` are different hashing schemas 
+- `zh` is for zip hash 
+- `h1` is for hash scheme 1 
+- TF will opportunistically add `h1` checksums 
+- can use the command below to avoid ongoing addition of new `h1` hashses 
+```bash
+terraform providers lock \ 
+    -platform=linux_amd64 \ 
+    -platform=darwin_amd64 \ 
+    -platform=windows_amd64
+```
+- this will download and verify all official packages
 ## Best practices
 ### Data Sharing
 - explicitly configuration such a `data.terraform_remote_state.vpc.outputs.subnet_id`
@@ -82,12 +164,15 @@ terraform {
 - `tfe_outputs` is more secure as it does not required full access to workspace state
 ### Cloud configuration
 - enables CLI-driven run workflow
+### Providers
+- installs providers on every run 
 ## Things to check on 
 - [ ] tf cloud remote state
 - [ ] tf workspace
 - [ ] tf cloud capabilities
 - [ ] try tf cloud ? 
 - [ ] provider_meta
+- [ ] reread https://developer.hashicorp.com/terraform/language/v1.1.x/files/dependency-lock
 
 https://developer.hashicorp.com/terraform/cli/cloud
 
