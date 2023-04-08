@@ -149,6 +149,23 @@ terraform providers lock \
     -platform=windows_amd64
 ```
 - this will download and verify all official packages
+
+## Navigate core workflow
+### Core workflow
+1. write
+- author of infra as code
+2. plan 
+- preview before applying
+3. apply
+- provision resources
+## Commands - Init
+- can run `-from-module=MODULE_SOURCE` to copy the module source into the current directory before init
+    - can be used in a VCS flow
+- `-migrate-state` copies existing state to new backend
+  - `-force-copy` suppresses command prompt to confirm
+- `-reconfigure` disregards any existing backend configuration and prevents migration of any existing state
+- `-backend=false` to skip backend initialization
+- `-backend-config=...` for partial backend configuration
 ## Best practices
 ### Data Sharing
 - explicitly configuration such a `data.terraform_remote_state.vpc.outputs.subnet_id`
@@ -166,6 +183,12 @@ terraform providers lock \
 - enables CLI-driven run workflow
 ### Providers
 - installs providers on every run 
+### Core workflow enhanced by TF cloud
+1. write
+- centralized and secure location for input vars and state
+- single TF cloud API key for team members 
+2. plan
+- auto run plans on every commit
 ## Things to check on 
 - [ ] tf cloud remote state
 - [ ] tf workspace
@@ -173,8 +196,31 @@ terraform providers lock \
 - [ ] try tf cloud ? 
 - [ ] provider_meta
 - [ ] reread https://developer.hashicorp.com/terraform/language/v1.1.x/files/dependency-lock
+- [ ] https://developer.hashicorp.com/terraform/tutorials/automation/automate-terraform?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS
+- [ ] https://developer.hashicorp.com/terraform/language/v1.1.x/settings/backends/configuration#partial-configuration
 
 https://developer.hashicorp.com/terraform/cli/cloud
 
 
 
+## additional commands
+- `terraform get` to get new versions of modules
+- `terraform validate` to validate the configuration files in a directory
+
+## folders
+- `.terraform` contains
+    - `plugins` contains the provider plugins
+    - `modules` contains the modules
+    - `terraform.tfstate` contains the state file
+- stuff in `.terraform` is read-only and should not be modified
+- `modules.json`
+```json
+{
+  "Modules": [
+    {
+      "Key": "nw_test_public",
+      "Source": "registry.terraform.io/terraform-aws-modules/ec2-instance/aws",
+      "Version": "3.6.0",
+      "Dir": ".terraform/modules/nw_test_public"
+    },
+```
