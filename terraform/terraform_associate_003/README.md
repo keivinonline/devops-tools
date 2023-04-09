@@ -166,6 +166,59 @@ terraform providers lock \
 - `-reconfigure` disregards any existing backend configuration and prevents migration of any existing state
 - `-backend=false` to skip backend initialization
 - `-backend-config=...` for partial backend configuration
+## Commands - Plan
+- reads current state of any existing remote objects to check if it's up to date
+- compare current config to previous state
+- proposes set of change actions
+- can use `-out=FILE` opton to save generated plan 
+- `out` file format is in binary but can be saved as JSON with `terraform show -json FILE`
+### Planning modes
+- activating any of the following disabled `normal` mode
+1. destroy mode (for both plan and apply for v0.15 and above)
+- `-destroy` flag
+2. Refresh-only mode (v0.15 and above)
+- to reconcile TF records with changes from remote
+- `-refresh-only` flag
+### Planning options
+1. `-refresh=false` 
+- TF ignores external changes
+2. `-replace=ADDRESS`
+3. `-target=ADDRESS`    
+4. `-var 'NAME=VALUE` 
+5. `-var-file=FILENAME` from a tfvars file
+### Other options
+1. `-compat-warnings`
+- only shows summary of warnings
+2. `-detailed-exitcode`
+- 0 if no changes and, 1 for error and 2 for non-empty diff(changes present)
+### Plan details
+1. `.prioir_state`
+- contains state prior to plan action
+2. Review resource drift
+- `.resource_drift` indicates changes outside of TF workflow
+## Commands - Apply
+### Automatic plan mode
+- by default it runs plan before apply
+### Plan options
+- when running without a saved plan, apply supports all planning modes
+## Apply TF configuration
+- if an existing lock file `.terraform.tfstate.lock.info` is present, it will report an error and exit
+### Errors during apply
+1. logs error and reports to console
+2. updates state file with changes
+3. unlocks state file 
+4. exits
+- TF does not support rolling back a partially-completed apply
+## Commands - destroy
+- remove all remote objects managed by TF
+- `terraform destroy` is an alias for `terraform apply -destroy` (since v0.15)
+- hence it accepts most of the options that apply to `terraform apply`
+## Commands - fmt
+- `-list=false` don't list files containing inconsistencies
+- `-write=false` dont overwrite input files
+- `-diff` to show diffs 
+- `-check` to check if formatting is required
+- `-recursive`, by default it only formats the current directory
 ## Best practices
 ### Data Sharing
 - explicitly configuration such a `data.terraform_remote_state.vpc.outputs.subnet_id`
@@ -175,6 +228,16 @@ terraform providers lock \
 ### Terraform core and provider versions
 - use minimum versions such as `>= 0.12.0`to preven breaking incompatibilities 
 - root modules should use `~>` to set lower and upper bound vesions
+### Plans
+- never commit a plan file to a VCS as it contains sensitive information
+- applying saved plans do not prompt for approvals
+### .tfvars
+- tfvars should not be committed to VCS especially if they contain sensitive information
+## enable logging 
+- `export TF_LOG_CORE=TRACE`
+- `export TF_LOG_PROVIDER=TRACE`
+- `export TF_LOG_PATH=logs.txt`
+
 ## Terraform Cloud
 ### Remote state 
 - terraform cloud uses stronger locking concepts that detect attempts to create a new plan when existing plan is waiting approval, by queueing the operations
