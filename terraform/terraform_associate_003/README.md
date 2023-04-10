@@ -252,6 +252,13 @@ terraform providers lock \
 - single TF cloud API key for team members 
 2. plan
 - auto run plans on every commit
+### Sensitive data
+- always encrypts state at rest and protects in transit with TLS
+- also supports detailed audit logging 
+### refresh-only mode
+- `allow-empty-apply` can be set to True in TF cloud
+- Actions > start new plan > allow empty apply run type
+
 ## Things to check on 
 - [ ] tf cloud remote state
 - [ ] tf workspace
@@ -286,4 +293,195 @@ https://developer.hashicorp.com/terraform/cli/cloud
       "Version": "3.6.0",
       "Dir": ".terraform/modules/nw_test_public"
     },
+```
+
+## Objective - #7
+### Manage State
+1. State locking
+- happens during write operations
+- can be disabled with `-lock=false` flag
+- can use `terraform force-unlock LOCK_ID` to unlock a state file
+- lock ID act as a nonce to for unique target
+2. Protect sensitive input vars
+- use `sensitive=true` to mark a var as sensitive and this will prevent it from being logged in console
+- can use a separate `secret.tfvars` or better use `TF_VAR_<var_name>` to decalre during cli run 
+- to get output from sensitive values, use the 
+```hcl
+output "db_connect_string" {
+    value = ... 
+    sensitive = true
+}
+```
+3. sensitive data in state
+- as of v0.9, TF does not persist data locally when using remote state
+### Backend Management
+1. Command - login
+- obtain and save API token for TF cloud or TF enterprise
+- `terraform login <hostname>`
+  - uses `app.terraform.io` by default
+  - saves in `.terraform.d/credentials.tfrc.json`
+2. Backends
+- stores state file
+- defaults to local 
+3. local backends
+```hcl
+terraform {
+    backend "local" {
+        path = "path/to/terraform.tfstate"
+    }
+}
+data "terraform_remote_state" "foo" {
+    backend = "local"
+    config = {
+        path = "path/to/terraform.tfstate"
+    }
+}
+```
+4. backend configuration
+- including access credentials in the backend configuration is not recommended
+- providing creds via env files is better
+- for consul
+```hcl
+terraform {
+    backend "consul" {}
+}
+```
+- the backend config will be
+```hcl
+address = "demo.consul.io"
+path = "example/terraform_state"
+scheme = "https"
+```
+- consul access token is also needed for this
+```bash
+CONSUL_HTTP_TOKEN=xxx
+# or 
+CONSUL_HTTP_AUTH=xxx
+```
+## Objective - #8
+### Resources
+- has meta-arguments
+1. `depends-on`
+- for hidden dependencies
+```hcl
+  depends_on = [
+    aws_iam_role_policy.example,
+  ]
+```
+2. `count`
+- for multiple reousrces
+3. `for_each`
+- based on map or set of strings
+```hcl
+resource "azurerm_resource_group" "rg" {
+    for_each = {
+        a_group = "eastus"
+        another_group = "westus2"
+    }
+    name = each.key
+    location = each.value
+}
+```
+- chaining 
+```hcl
+resource "aws_vpc" "foo" {
+    for_each = var.vpcs
+    cidr_block = each.value.cidr_block
+}
+resource "aws_internet_gateway" "example" {
+    for_each = aws_vpc.foo
+    vpc_id = each.value.id
+}
+```
+4. `provider`
+5. `lifecycle`
+```hcl
+...
+    lifecycle {
+        create_before_destroy = true
+        ignore_changes = [
+            tags,
+        ]
+        prevent_destroy = true
+    }
+```
+6. `provisioner`
+- operation time-outs
+```hcl
+...
+    timeouts {
+        create = "60m"
+        delete = "2h"
+    }
+```
+### Complex types
+1. collection
+- multiple values one other type
+    - list(string)
+    - list(number)
+    - list(bool)
+2. structural types
+- object(...)
+- tuple(...)
+```hcl
+{
+    name = "john"
+    age = 52
+}
+```
+3. Dynamic types - "any" constraint
+- `any`is not a type, but a placeholder
+- list(any)
+```hcl
+variable "no_type_constraint" {
+    type = any
+}
+```
+4. optional object type attribute
+```hcl
+variable "with_optional_att" {
+    type = object({
+        a = string
+        b = optional(string)
+        c = optional(number, 123) # default value
+    })
+}
+```
+### Inject secrets into TF using vault provider
+- export the env values
+```bash
+export VAULT_ADDR=https://vault.example.com
+export VAULT_TOKEN=xxx
+# successful vault msg
+[INFO]  core: successful mount: namespace= path=dynamic-aws-creds-vault-admin-path/ type=aws
+
+```
+```hcl
+data "vault_aws_access_credentials" "creds" {
+  backend = data.terraform_remote_state.admin.outputs.backend
+  role    = data.terraform_remote_state.admin.outputs.role
+}
+provider "aws" {
+  region     = var.region
+  access_key = data.vault_aws_access_credentials.creds.access_key
+  secret_key = data.vault_aws_access_credentials.creds.secret_key
+}
+```
+- every TF run will use unique set of IAM credentials
+- after 120seconds, vault will destroy the short-lived AWS credentials
+- benefits
+    1. vault's admin responsible for IAM creds is reduced
+    2. management of role permissions through vault role
+
+## Sentinel
+- "*.sentinel" file 
+- types
+1. hard-mandatory - halts run if policy fails
+2. soft-manadatory - allows Admin to override policy failures 
+3. advisory
+- never interupts the run and only surface policy failures
+```hcl
+policy "allowed-terraform-version" {
+    enforecement-level = "soft_mandatory"
+}
 ```
