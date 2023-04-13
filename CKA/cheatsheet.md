@@ -18,4 +18,7 @@ k create deploy nginx --image=nginx --dry-run=client -o yaml > nginx-deploy.yaml
  k run --restart=Never --image=busybox static-busybox --dry-run=client -o yaml --command -- sleep 1000 > static-busybox.yaml
 # to view events
 k get events -o wide
+
+# view cluster configs
+k config view
 ```
