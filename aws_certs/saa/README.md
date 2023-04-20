@@ -69,11 +69,51 @@
 - can be restored within 12 hours for standard, 48 for bulk
 ### Application Migration service
 - onprem to AWS for SAP, oracle sql server
-- 
 
 ## 3. Design high-performing architectures
+### API Gateway
+- `API Caching` - cache backend responses to reduce calls made 
+- `Gateway Response` - to customize error responses
+- `Method response model` - to set up a response format 
+- `Mapping templates`
+    - transform request from frontend data formate to backend data format vice versa
+    - done via Velocity Template Language (VTL)
 
+### S3 Event notifications
+### EventBridge
+- start processing after changes to objects store in S3
+1. Advanced filtering
+- match object parameters for specific notifications
+2. Multiple destinations
+3. Fast and reliable without custom codes
 
+### Autoscaling Policies
+- Default
+- AllocationStrategy - rebalancing base on policy
+- OldestLaunchTemplate
+- OldestLaunchConfiguration
+- ClosestToNextInstanceHour - will terminate instance closest to billing cycle
+- NewestInstance
+- OldestInstance
+
+### Cloudformation - Custom Resources
+- write custom provisioning logic in CF template
+1. Amazon SNS backed custom resource
+- receives notification and invokes logic
+2. Lambda-backed custom resource
+
+### EC2 Hibernate
+- suspend to disk
+- saves contents from RAM to EBS root volume
+
+### Private NAT Gateway
+- route traffic between 2 VPCs with overlapping subnets
+- create new subnets in each vpc for routing
+- create a private NAT in source VPC and an load balancer in dest VPC
+
+### Write intensive workloads for RDS
+- place SQS in front of RDS to prevent write operation 
+- SQS scales automatically and can be used to buffer writes
 ## 4. Design secure architectures
 
 
@@ -101,3 +141,61 @@
 - integrates well with SQS
 ### Private link
 - underlying for VPC interface endpoints
+
+### Kinesis Data Firehose
+- capture, transform and load various sources to 
+    - S3
+    - Redshift
+    - Data lakes etc
+- does not capture data from video streaming devices
+### Kinesis Data Analytics
+- gate streaming data from Kinesis Data Streams and S3 and IoT
+- creates alerts or respond in real-time
+### Kinesis Video Streams
+- for video playback, face detection, security monitoring etc
+- can use Rekognition after this
+### Kinesis Data Streams
+- capture GBs of real-time data 
+- does not do video streams 
+
+### Aurora Parallel Query
+- only for MySQL
+- perform queries over data stored in db without copying data to separate system
+
+### Redshift Spectrum
+- query data directly from files in S3 
+### Redshift Advanced Query Accelerator (AQUA)
+- speeds up queries by caching results in memory
+
+### Cloudformation
+1. cfn-init
+- retrieve and interpret metadata from AWS::Cloudformation::Init
+- installs packages, configures services, creates files and etc
+2. cfn-hup
+- checks updates to metadata and executes custom hooks
+3. cfn-signal
+- indicate software or app is updated on EC2
+4. cfn-get-metadata
+- retrieve metadata for a resource via a key 
+
+### Application Discovery Service
+- collects data from onpem
+1. agentless discovery
+- suited for VMware 
+- deploys an OVA 
+2. agent-based discovery
+- best suited for physical servers
+
+### Snowball Edge
+- has different flavours
+1. data transfer 
+- supports 100 TB (80TB usage) 
+2. ec2 compute
+- 40 vCPU, 80 GB mem and 1 TB ssd
+3. compute optimized
+4. compute optimized with GPU
+
+### Snowcone
+- only supports 8TB HDD 
+### AWS transfer family with FTPS
+- for SFTP, FTPS and FTP to and from S3 
