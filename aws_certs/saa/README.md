@@ -199,3 +199,81 @@
 - only supports 8TB HDD 
 ### AWS transfer family with FTPS
 - for SFTP, FTPS and FTP to and from S3 
+
+
+### WAF
+1. blanket rate-based rule
+- block source IP addresses that generate excessive requests
+2. URI-specific rate-based rule
+- blocks IP making requests to specific URI
+- useful to prevent DDOS attacks and expensive resources
+3. IP reputation rate-based rule
+- prevents malicious IPs from making requests to app
+4. managed group rules
+- would not track rate of requests
+
+### AWS Orgs - SCP
+- SCPs do not have impact on users and roles in management accounts
+- can use "S3 block public access" to block public access to S3 buckets in all accounts
+
+### AWS EKS Anywhere
+- can be used to deploy K8s infra at onprem
+- EKS anywhere uses VMware vSphere for this deployment
+- Amazon Distro can be used for distribution of K8s and dependencies deployed by EKS to K8s clusters on prem
+- EKS anywhere doe not work with Outposts
+
+## AWS S3 - Glacier Vault
+- can be attached with 
+    - 1 vault access policy 
+    - 1 vault lock policy
+- Access policy - who can access the vault
+- Vault lock policy - no changes can be done once locked
+
+### AWS SSO (previously named Identity Center)
+- has built-in support for other applications like Salesforce, Jenkins etc
+- has flexibility of having user database in IAM, AWS managed AD or on
+- integrates with Identity provider that is SAML 2.0 compliant
+
+### CloudTrail Lake
+- fully managed service to collect, store and analyze CloudTrail logs
+
+### GuardDuty
+- fully managed advanced threat detection service 
+- identify threats like account, instance nad bucket compromise
+- process data that can be used to generate thread detections only, hence saving costs
+
+### Macie
+- protects sensitive data from unauthorized access in S3
+
+### Systems Manager
+- manage and remediate operational issues
+
+### AWS Inspector - Run Vulnerability Assessments
+- define assessment target and include all instances in AWS and region
+- 
+### AWS KMS
+1. Asymmetric KMS Keys
+- private key never leaves KMS unencrypted
+- used for digitally signing and verifying messages, transactions, tokens etc
+2. Symmetric KMS Keys
+- default encryption method for KMS
+- same key for encryption and decryption
+- 
+
+### AWS RDS - TDE
+- Transparent Data Encryption (TDE) is supported for Oracle and SQL servers only
+- TDE with Oracle can be integrated with AWS CloudHSM which stores, generates and manages kes in the hardware security module.
+
+### AWS Shield
+- provides higher protection to DDoS attacks
+- provides real-time visibility of attaches and can be integrated with WAF 
+- AWS shield is automatically enabled for AWS resources 
+- AWS Shield Advanced
+    - Shield Response Team (SRT) is engaged with customer
+    - needs to be enabled on other resources
+
+### VPC endpoints
+1. accessing KMS keys
+- restricted via matching VPC Endpoint ID or VPC ID 
+`aws:sourceVpce` - restricts access based on VPC endpoint
+`aws:sourcevpc`  based on VPC that hosts private endpoint
