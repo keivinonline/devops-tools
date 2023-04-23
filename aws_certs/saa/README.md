@@ -33,6 +33,57 @@
 - on-demand, auto-scaling configuration for Aurora
 - auto starts, stops and scales capacity up and down
 
+### EKS - Fargate
+- can be used to set up open-source container orchestration like K8s
+- can be integrated with other public or private clouds
+- can be used with AWS Fargate
+
+### DynamoDB Streams
+- ordered flow of information about changes to dynamodb tables
+- can be used to capture "before" and "after" images or items
+
+### RDS - parameter group
+- parameter groups act as a container for engine configuration values to 1 or more DB
+- cannot modify default parameter group
+- must create new parameter group and modify config 
+    - max_connections
+
+### Route 53 - routing policies
+1. weighted
+- for blue-green deployments 
+- associate multiple resources for a single domain name and specify a weight for each resource
+2. multivalue answer 
+- route traffic randomly for multiple resources 
+### S3 - glacier instant retrieval 
+- each object in S3 bucket can have a user-defined storage class
+### S3 - multi-part upload
+- simple PUT can upload up to 5 GB
+- multipart upload can handle 5GB to 5TB
+
+### ECS - data parameter
+- used to perform automated config tasks such as 
+    - docker daemon config
+    - ECS container agent config
+### API gateway - integration sources
+1. pubic facing HTTP endpoint outside of AWS
+2. lambda functions from other accounts
+3. VPC link
+### API gateway - backend integrations
+1. lambda, ec2
+2. non-aws hosted HTTP endpoint
+### Cloudfront - trigger Lambda@Edge
+1. viewer request
+2. viewer response
+3. origin request
+4. origin response
+- request
+[end_user] -> [viewer request] -> [cloudfront_cache] -> [origin request] -> [server]
+- response
+[server] -> [origin response] -> [cloudfront_cache] -> [viewer response] -> [end_user]
+### Lambda - poll based servies
+- kinesis
+- dynamoDB
+- SQS
 ## 2. Design Cost-optimized architectures 
 ### Redshift Datashare
 - datashare is a unit of sharing data that can be created for data sharing across accounts
@@ -70,6 +121,13 @@
 ### Application Migration service
 - onprem to AWS for SAP, oracle sql server
 
+### RDS - automated backups
+- default retention period of 1 day (0 to 35 days)
+- for > 35 days, can copy the snapshot which will be stored as manual snapshot and don't expire
+- best practice to export to S3 for Maria, MySQL and Postgresql
+### S3 intelligent tiering
+- monitors access patterns and moves objects between 2 tiers
+- 128KB always remain in S3 standard storage class 
 ## 3. Design high-performing architectures
 ### API Gateway
 - `API Caching` - cache backend responses to reduce calls made 
@@ -114,9 +172,98 @@
 ### Write intensive workloads for RDS
 - place SQS in front of RDS to prevent write operation 
 - SQS scales automatically and can be used to buffer writes
+
+### Site to Site vpn setup
+- virtual private gateway attached to VPC
+- public IP on customer gateway for onprem network
+### Security groups
+- no inbound traffic is allowed by default
+- which is essentially a whitelist
+- can't specify deny rules for security groups
+### Autoscaling - SQS queues
+- SQS queue to store incoming jobs
+- custom cloudwatch metric to measure queue size `ApproximateNumberOfMessagesVisible` at 5 mins interval
+- target tracking policy that configures autoscaling group based on alarms triggered by custom metric
+### Aurora DB trigger Lambda permissions
+1. create IAM role for auroraDB
+2. grant permissions to invoke lambda function
+3. set `aws_default_lambda_role` for DB cluster parameter group
+4. associate DB cluster parameter group to DB cluster
+5. allow outbound connections from DB to lambda
+
+### EMR and Apache Spark and S3
+- Amazon EMR used to process large amounts of data
+- supports Apache Spark, HBase, Flink, Hudi ,Hive and presto
+- compute and storage are decoupled
+- can use S3 as storage 
+- clusters can be launched and stopped on demand
+### DynamoDB - autoscaling
+- adjusts throughput capacity based on workload
+- must provide initial settings for read and write 
+### Redshift - Kinesis Data Firehose Delivery system
+- Redshift as analytical service
+1. `Kinesis Data Firehose` as ingestion service
+    - need to first store in S3 bucket 
+    - then copies data to redshift 
+- only stores data up to 24 hours if destination is unavailable
+- supports transformation of data
+    - compression
+    - batch
+    - encryption
+### Cloud trail - multi region
+- create trail and apply to all regions
+- logs to specified s3 bucket
+### CIDR standards
+- aws reserves 5 ip addresses for each subnet
+1. 10.0.0.0 network address
+2. 10.0.0.1 VPC router
+3. 10.0.0.2 DNS service
+4. 10.0.0.3 for future use
+5. 10.0.0.255 for broadcast
+### S3 - performance
+- delivers strong read-after-write and list consistency automatically
+### EBS storage
+1. `throughput optimized HDD (st1)`
+- 500 MiB/s 
+2. `code HDD (sc1)`
+- 250 MiB/s
+3. `gp2`
+- 250 MiB/s
+4. `gp3`
+- 1,000 MiB/s
+5. `Provisioned IOPS (Block express) io2`
+- up to 64 TB anmd 4,000 MiB/s
+### DynamoDB - performance
+- when each data item < 20KB, use DynamoDB
+### S3 - DELETE API call
+- when versioning is enabled, DELETE cannot permanently delete an object
+- instead, it inserts a delete marker
+- returns a 404 if object is current version
+- use `delete object versioned` to permanently delete object
+### Lambda - when updating versions
+- between versions, up to 1 minute window, the requests can be served by either latest of current version of deployment
+
 ## 4. Design secure architectures
 
-
+### Network load balancer (NLB) - TLS
+- requires 1 certificate per TLS connection
+- uses Server name indication (SNI) for selection algorithm for certs
+- up to 2048 bits RSA only
+### Redshift - encryption at rest
+- can modify cluster to enable encryption to use KMS
+- cluster will be migrated to a new encrypted cluster and vice versa
+###  Cognito
+- integrate with facebook, amazon and google etc
+1. user pools
+- sign in to web or mobile app
+2. identity pools
+- obtain temp AWS credentials to access AWS services
+### Application Load Balancer (ALB) - Certs
+- supports SNI (server name indication) which supports multiple domain names with different TLS certs behind single ALB
+### AWS Partner Network (APN)
+- grant cross account IAM role for third party 
+### VPC - extend CIDR range
+- 
 ## Services recap
 ### Rekognition
 - identify objects and etc in images or videos
