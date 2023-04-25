@@ -84,6 +84,13 @@
 - kinesis
 - dynamoDB
 - SQS
+### Placement groups
+1. Cluster placement group
+- puts instances in single AZ 
+2. spread placement group
+- puts instances across different racks
+3. partition placement group
+- instances in a partition have their own set of racks
 ## 2. Design Cost-optimized architectures 
 ### Redshift Datashare
 - datashare is a unit of sharing data that can be created for data sharing across accounts
@@ -128,6 +135,26 @@
 ### S3 intelligent tiering
 - monitors access patterns and moves objects between 2 tiers
 - 128KB always remain in S3 standard storage class 
+### Redshift cluster - snapshots
+- automated snapshots are automatically deleted within max 35 days
+### Amazon glacier
+1. expedited retrieval
+- 1 - 5 mins
+2. bulk retrieval
+- lowest cost option
+- 5-12 hours
+3. standard retrieval
+- 3-5 hours
+### Savings plan
+1. compute savings plan
+- regardless of instance family, AZ , region and OS
+2. ec2 savings plan
+- specific instance family
+### EBS types
+1. Cold HDD
+- infrequent usage, not throughout the day
+- 125 GB to 16 TB 
+
 ## 3. Design high-performing architectures
 ### API Gateway
 - `API Caching` - cache backend responses to reduce calls made 
@@ -243,6 +270,24 @@
 ### Lambda - when updating versions
 - between versions, up to 1 minute window, the requests can be served by either latest of current version of deployment
 
+### Direct Connect + VPN
+- can create IPsec-encrypted private connections
+### Elastic Fabric Adapter (EFA)
+- low latency and high through put for High performance computing
+### Auto scaling - lifecycle hooks
+- puts instance in wait state before termination
+- during this wait state, can perform custom activities 
+- default wait state is 1 hour
+- a popular hook is to control when instances registers with ELB
+###  Global Accelerator
+- redirects user requests to nearest edge location and routes data to global network
+- reroutes to healthy IPS if fails
+- does not rely on IP cached on client devices
+- change propagation is in seconds
+- gets static IP that provides fixed entry point to applications 
+### Cloudformation - change detection
+- only checks property values explicitly set by stack templates or template parameters
+
 ## 4. Design secure architectures
 
 ### Network load balancer (NLB) - TLS
@@ -264,6 +309,26 @@
 - grant cross account IAM role for third party 
 ### VPC - extend CIDR range
 - 
+### Lambda - without need to update code
+1. configure lambda functions to use key configurations
+- allows encryption of env vars without deploying new code
+2. use encryption helpers
+- encrypt variables before sending to lambda
+
+### VPC endpoints
+1. Gateway endpoints
+- can be specified in route table to access S3 and dynamoDB
+2. interface endpoints
+- extend functionality of gateway endpoints using private IP and route requests to S3 from 
+    - vpc
+    - onpremise
+    - vpc in another region using VPC peering or transit gateway
+- does not support dynamodb
+### Cloudtrail - integrity validation
+- uses sha 256 to hash and RSA for digital signing
+- makes it tamper proof
+### Lambda - notifications
+- use dead letter queue (DLQ) using SQS and SNS for non-processed payloads
 ## Services recap
 ### Rekognition
 - identify objects and etc in images or videos
