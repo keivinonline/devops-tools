@@ -91,6 +91,19 @@
 - puts instances across different racks
 3. partition placement group
 - instances in a partition have their own set of racks
+### Privatelink
+- private connectivity between VPCs
+- need network load balancers to be used in service providers
+- network load balancer will perform a source NAT 
+### RDS snapshots
+- creates a volume snapshot of DB once a day during window
+- RDS uploads transaction logs to S3 every 5 minutes
+### Shifting AWS Orgs
+1. remove all members from old Org
+2. delete old org
+3. invite management acc of old org to be member of new org
+### Database migration service (DMS)
+- Schema migration tool can be used to convert sql to nosql for dynamodb
 ## 2. Design Cost-optimized architectures 
 ### Redshift Datashare
 - datashare is a unit of sharing data that can be created for data sharing across accounts
@@ -154,7 +167,9 @@
 1. Cold HDD
 - infrequent usage, not throughout the day
 - 125 GB to 16 TB 
-
+### Glacier to S3 move
+1. restore objects from glacier deep archive using s3 console
+2. use lifecycle policy to move objects to other s3 tier
 ## 3. Design high-performing architectures
 ### API Gateway
 - `API Caching` - cache backend responses to reduce calls made 
@@ -288,6 +303,33 @@
 ### Cloudformation - change detection
 - only checks property values explicitly set by stack templates or template parameters
 
+### Datasync
+- can perform opposite direction syncs
+- but can't run both direction syncs at the same time
+- only support periodically and not simultaneously or multiple active application writes
+### DynamoDB streams and lambda
+1. associate stream ARN with a lambda function 
+2. lambda polls the changes when item is modified or new record created
+### redshift and EMR
+- redshift performs analytics 
+- emr can be used to shift data from kinesis streams to redshift
+### Cloudfront
+1. pre-signed URLs
+- contains user login credentials for specific urls
+- allows user to upload specific object to a bucket
+- when creating the url, need to provide
+    - bucket name
+    - object key
+    - HTTP method
+    - expiration date
+### RDS - read replica
+- can be created in a different region
+### DynamoDB - global tables
+- fully managed for multi-region, multi-active database
+### Gateway cached volumes
+- retains copy of frequent data locally
+### Gateway stored volumes 
+- for inexpensive data
 ## 4. Design secure architectures
 
 ### Network load balancer (NLB) - TLS
@@ -329,6 +371,28 @@
 - makes it tamper proof
 ### Lambda - notifications
 - use dead letter queue (DLQ) using SQS and SNS for non-processed payloads
+### Server migration service
+- migrates onprem workloads to EC2 only
+### Server migration service connector
+- FreeBSD VM installed onprem and works with server migration service
+### PHP WAF rule
+- Aws managed PHP application rule 
+- add in web ACL of WAF
+### Cloudfront
+1. pre-signed URLs
+- contains user login credentials for specific urls
+- does not ensure contents can only be accessed through cloudfront
+- for individual files only
+2. Restrict access to cloudfront only
+- Create Origin Access Identity (OAI) in cloudfront
+- use S3 bucket policy to only allow OAI to access
+3. Origin with cookies
+- use cookies to restrict access to cloudfront
+- access to multiple files
+### RDS - enable encryption on existing db
+1. create snapshot of unencrypted DB
+2. copy snapshot and enable encryption
+3. restore the DB
 ## Services recap
 ### Rekognition
 - identify objects and etc in images or videos
