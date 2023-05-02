@@ -104,6 +104,24 @@
 3. invite management acc of old org to be member of new org
 ### Database migration service (DMS)
 - Schema migration tool can be used to convert sql to nosql for dynamodb
+### AWS datasync
+- supports lustre file system
+### FSx
+- FSx for lustre integrates with S3
+- FSx can be shared to multiple vpc, regions using inter-vpc, inter-account and region access
+- FSx for windows offers singale and multi AZ with options of 
+    - SSD and HDD
+### ECS -  Dynamic port mapping
+- supported by App load balancer and network load balancer
+### SNS
+- uses pub/sub to provide async event notifications
+### Aws batch
+- if jobs get stuck in RUNNABLE status, then something is preventing it from being placed on compute resources
+1. awslogs log driver not configured 
+2. insufficient resources
+3. no internet access
+4. ec2 instance limit reached
+
 ## 2. Design Cost-optimized architectures 
 ### Redshift Datashare
 - datashare is a unit of sharing data that can be created for data sharing across accounts
@@ -330,6 +348,35 @@
 - retains copy of frequent data locally
 ### Gateway stored volumes 
 - for inexpensive data
+### Unified cloudwatch agent
+1. collect internal system-level metrics for ec2 or on prem
+2. collect custom metrics from apps on ec2 using statsD and collectD
+3. collect logs from ec2 or on prem 
+4. for autoscaling group, can aggregate metrics using "aggregate_dimensions" in agent config
+
+### ECS and outpost
+- ec2 launch type with EC2 is supported in outpost for low latency onprem usage
+- for consistent high cpu and mem usage
+### Redshift - performance data
+1. cloudwatch metrics - cpu, latency and throughput of redshift clusters
+2. query/load data via redshift console
+- custom queries can eb created to query performance data
+can support up to 10 Gbps for single-flow traffic
+- instances not within cluster placement group can use 5 Gbps for single flow
+### DynamoDB - global secondary index
+- GSI allows different hash key for the table for complex queries
+### ECMP - equal cost multi path
+- aws provides 2 vpn endpoints, ECMP can be used to carry traffic on both endpoints to increase performance
+### EFA - elastic fabric adapter
+- must be be a member of SG that allows all inbound and outbound to itself
+- OS-bypass capabilities for non windows
+### Codepipeline - S3 source
+1. cloudwatch even rule and cloudtrail must be applied
+2. disable peeriodic checks
+### Placement groups
+- can migrate instances between placement groups but merging is not supported
+1. cluster placement group
+- provides high performance networking
 ## 4. Design secure architectures
 
 ### Network load balancer (NLB) - TLS
@@ -393,6 +440,40 @@
 1. create snapshot of unencrypted DB
 2. copy snapshot and enable encryption
 3. restore the DB
+### Global accelerator, ELB, IoT
+- provides 2 anycast static ip addresses
+### Athena
+- decrypts s3 data automatically
+### AWS org- cloudwatch events
+- can use cloudwatch events to raise actions for aws org
+### Cloudfront -> s3
+1. Origin access identity (OAI)
+- legacy method that does not support KMS or dynamic requests to s3
+2. origin access control (OAC)
+- new method
+- principal element should be "cloudfront.amazonaws.com" and the condition should match cloudfront distribution which contains s3
+### ECS networking
+1. host mode
+- basic mode where container network is tied to host
+2. bridge mode
+- network between container and host
+- allows remapping of ports between host and container ports
+3. non
+- no external connection
+4. awsvpc mode
+- each task has a separate ENI with separate IP and SG 
+- separate security policies for each task
+### S3 and dynamodb endpoints
+1. Gateway endpoints
+- establish from private subnet  -> s3 or dynamodb
+- flows through private links
+2. service endpoint
+- can be accessed from onprem 
+
+### Cloud HSM - backup to s3
+1. generates unique ephemeral backup key (EBK) to encrypt data using aes 256
+2. the EBK is then encrypted using persistent backup key (PBK) using AES 256 as well in the same region
+- 
 ## Services recap
 ### Rekognition
 - identify objects and etc in images or videos
