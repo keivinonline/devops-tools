@@ -21,4 +21,7 @@ k get events -o wide
 
 # view cluster configs
 k config view
+
+# view shortnames etc
+k api-resources
 ```
