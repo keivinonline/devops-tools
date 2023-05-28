@@ -21,6 +21,18 @@ k get events -o wide
 
 # view cluster configs
 k config view
+# tagerted view 
+k config view --kubeconfig=my-config
+# get contexts
+k config get-contexts
+# get current context
+k config current-context
+# set contexts 
+k config use-context <context>
+# get clusters
+k config get-clusters
+# set namespaces
+k config set-context -current -namespace=dev
 
 # view shortnames etc
 k api-resources
