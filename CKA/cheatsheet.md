@@ -34,6 +34,33 @@ k config get-clusters
 # set namespaces
 k config set-context -current -namespace=dev
 
+# create the role based on the above yaml
+k create -f developer-role.yaml
+# link the role to a user
+k create -f devuser-role-binding.yaml 
+# view roles
+k get roles
+# get rolebindings
+k get rolebindings
+# describe role
+k describe role developer
+# decribe role bindings
+k describe rolebindings devuser-role-binding
+# check my user
+k auth can-i create deployments
+# impersonate other users
+k auth can-i create pods --as dev-user --namespace test
+# edit role on the fly
+k edit role developer -n blue
+# implicit role create
+k create role developer \
+--verb=list,create,delete \
+--resource=pods
+# implicit create rolebinding
+k create rolebinding developer-binding \
+--clusterrole=developer \
+--user=developer
+
 # view shortnames etc
 k api-resources
 ```
