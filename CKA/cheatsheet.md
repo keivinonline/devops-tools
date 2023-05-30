@@ -61,6 +61,17 @@ k create rolebinding developer-binding \
 --clusterrole=developer \
 --user=developer
 
+# see namespaced resources
+k api-resources --namespaced=true
+k api-resources --namespaced=false
+
+# describe clusterrole
+k describe  clusterrole argocd-server
+k describe  clusterrolebinding argocd-server
+# create clusterrole
+k create clusterrole storage-admin --verb='*' --resource=persistentvolumes,storageclasses
+# create clusterrolebinding
+k create clusterrolebinding storage-admin-binding --clusterrole=storage-admin --user=storage-admin
 # view shortnames etc
 k api-resources
 ```
