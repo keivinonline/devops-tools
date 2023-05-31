@@ -72,6 +72,18 @@ k describe  clusterrolebinding argocd-server
 k create clusterrole storage-admin --verb='*' --resource=persistentvolumes,storageclasses
 # create clusterrolebinding
 k create clusterrolebinding storage-admin-binding --clusterrole=storage-admin --user=storage-admin
+
+k create sa my-service-account
+k create token my-service-account
+# create docker creds
+k create secret docker-registry regcred \
+--docker-server=<registry> \
+--docker-username=<user> \
+--docker-password=<password> \
+--docker-email=<email>
+
 # view shortnames etc
 k api-resources
+# get help wit yaml values
+k explain Pod.spec 
 ```
