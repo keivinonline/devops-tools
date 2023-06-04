@@ -82,8 +82,17 @@ k create secret docker-registry regcred \
 --docker-password=<password> \
 --docker-email=<email>
 
+# replace a resource with yaml
+k replace -f pod.yaml --force
+
+# network policies
+k get netpol
+
 # view shortnames etc
 k api-resources
 # get help wit yaml values
 k explain Pod.spec 
 ```
+
+## Reads
+- Network policy https://github.com/networkpolicy/tutorial#what-is-stateful-policy-enforcement 
