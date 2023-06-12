@@ -88,11 +88,59 @@ k replace -f pod.yaml --force
 # network policies
 k get netpol
 
+## networking
+# check service ip range
+ps aux |grep -i kube-api-server
+range="10.X.X.X/12" 
+
+
+
+
 # view shortnames etc
 k api-resources
 # get help wit yaml values
 k explain Pod.spec 
 ```
+## Steps
+- node interfaces
+```bash
+# get internal IP of node
+k get nodes -o wide
+# grep IP from ip a 
+ip a |grep -i "<ip>"
+```
+- show bridge interface
+```bash
+ip a show type bridge
+```
+- check default routes
+```bash
+ip route
+```
+- check established sockets to etcd
+```bash
+netstat -npa |grep -i "etcd" |grep -i "established"
+```
+- check container flag on kubelet service 
+```bash
+ps aux |grep kubelet |grep container
+```
+- all plugins are stored in `/opt/cni/bin`
+- all configs are stored in `/opt/cni/net.d`
+- ensure a container lands on specific node 
+```bash
+k run busybox --image=busybox --dry-run=client -o yaml -- sleep 1000 > busybox.yaml
+```
+```yaml
+...
+spec:
+  nodeName: node01
+  containers:
+  ...
+
+```
+
+
 
 ## Reads
 - Network policy https://github.com/networkpolicy/tutorial#what-is-stateful-policy-enforcement 
