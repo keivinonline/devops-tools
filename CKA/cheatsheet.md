@@ -94,7 +94,14 @@ ps aux |grep -i kube-api-server
 range="10.X.X.X/12" 
 
 
-
+## get ingress
+k get ingress
+## describe to see paths etc
+k describe ingress <name>
+# imperative create ingress
+k create ingress <name> --rule="host/path=service:port"
+# example 
+k create ingress ingress-test --rule="mystore.com/checkout*=checkout-service:8080"
 
 # view shortnames etc
 k api-resources
