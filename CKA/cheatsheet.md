@@ -103,6 +103,14 @@ k create ingress <name> --rule="host/path=service:port"
 # example 
 k create ingress ingress-test --rule="mystore.com/checkout*=checkout-service:8080"
 
+# expose a deployment with a service
+k expose deploy ingress-controller -n ingress-space \
+--name ingress --port=80 --target-port=80 --type=NodePort
+
+# install specific version of kubeadm and etc
+sudo apt-get install kubeadm=1.26.0-00 kubelet=1.26.0-00 kubectl=1.26.0-00
+
+
 # view shortnames etc
 k api-resources
 # get help wit yaml values
@@ -146,8 +154,55 @@ spec:
   ...
 
 ```
+- for nginx-ingress, if the web service does not have a path e.g. `/pay`, we need to annotate the ingress to use rewrite to match the path of e.g. `/path -> /` from ingress to service
+```yaml
+...
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/sssl-redirect: "false" # if we want to redirect to https
+```
 
 
 
 ## Reads
 - Network policy https://github.com/networkpolicy/tutorial#what-is-stateful-policy-enforcement 
+## things to revise on 
+- expose command
+
+
+## questions
+1. static pod - need to create in manifest dir 
+```bash
+kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -oyaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml
+```
+2. exposing a service within cluster
+```bash
+#Create a service messaging-service to expose the messaging application within the cluster on port 6379.
+kubectl expose pod messaging --port=6379 --name messaging-service
+```
+3. expose a nodeport 
+```bash
+# Expose the hr-web-app as service hr-web-app-service application on port 30082 on the nodes on the cluster.
+
+# The web application listens on port 8080.
+
+kubectl expose deployment hr-web-app --type=NodePort --port=8080 --name=hr-web-app-service --dry-run=client -o yaml > hr-web-app-service.yaml to generate a service definition file.
+
+#Now, in generated service definition file add the nodePort field with the given port number under the ports section and create a service.
+```
+4. creating a pv with hostPath
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-analytics
+spec:
+  capacity:
+    storage: 100Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+      path: /pv/data-analytics
+```
