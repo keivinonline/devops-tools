@@ -110,6 +110,10 @@ k expose deploy ingress-controller -n ingress-space \
 # install specific version of kubeadm and etc
 sudo apt-get install kubeadm=1.26.0-00 kubelet=1.26.0-00 kubectl=1.26.0-00
 
+# quickly debug a pod via logs 
+k get event  --field-selector involvedObject.name=<pod-name>
+
+
 
 # view shortnames etc
 k api-resources
@@ -205,4 +209,188 @@ spec:
     - ReadWriteMany
   hostPath:
       path: /pv/data-analytics
+```
+5. etcd backup
+```bash
+# check etcd manifest file
+cat /etc/kubernetes/manifests/etcd.yaml
+ETCDTL_API=3 etcdctl \
+endpoints=http://127.0.0.1:2379 \
+--cacert=/etc/kubernetes/manifests/etcd/ca.crt \
+--cert=/etc/kubernetes/manifests/etcd/server.crt \
+--key=/etc/kubernetes/manifests/etcd/server.key \
+snapshot save xxxx.db
+```
+5. We have deployed a new pod called np-test-1 and a service called np-test-service. Incoming connections to this service are not working. Troubleshoot and fix it.
+Create NetworkPolicy, by the name ingress-to-nptest that allows incoming connections to the service over port 80.
+
+Important: Don't delete any current objects deployed.
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-nptest
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      run: np-test-1 # depends on labels
+  policyTypes:
+    - Ingress
+  ingress:
+  - ports:
+    - protocol: TCP
+      port: 80
+```
+6. taint a node and set tolerations to a pod
+```bash
+# taint
+k taint nodes node01 env_type=production:NoSchedule
+```
+```yaml
+...
+spec:
+  tolerations:
+  - key: "env_type"
+    operator: "Equal"
+    value: "production"
+    effect: "NoSchedule"
+```
+1) install etcd
+sudo apt install etcd-client
+
+```
+cluster2-controlplane ~ ➜ cd /tmp
+cluster2-controlplane ~ ➜ export RELEASE=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep tag_name | cut -d '"' -f 4)
+cluster2-controlplane ~ ➜ wget https://github.com/etcd-io/etcd/releases/download/${RELEASE}/etcd-${RELEASE}-linux-amd64.tar.gz
+cluster2-controlplane ~ ➜ tar xvf etcd-${RELEASE}-linux-amd64.tar.gz ; cd etcd-${RELEASE}-linux-amd64
+cluster2-controlplane ~ ➜ mv etcd etcdctl  /usr/local/bin/
+```
+7. get top pod usage 
+```bash
+kubectl top pods -A --context cluster1 --no-headers | sort -nr -k3 | head -1
+```
+8. always add a `context` flag to scripts
+```bash
+kbectl --context cluster1 get service service-cka25-arch -o jsonpath='{.spec.ports[0].targetPort}'
+```
+9. mysql needs min 512 MB of ram
+10. endpoints
+```yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # the name here should match the name of the Service
+  name: external-webserver-cka03-svcn
+subsets:
+  - addresses:
+      - ip: $IP_ADDR
+    ports:
+      - port: 9999
+```
+```bash
+k get endpoints
+```
+11. match Namespace + label
+```yaml
+spec:
+  egress:
+  - {}
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: cyan-white-cka28-trb
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: default
+```
+
+
+
+## todos
+```bash
+# setup alias
+API="kubectl api-resources"
+OUT=" --dry-run=client -o yaml"
+DRY=" --dry-run=client"
+
+# shortcut to get json paths 
+k get nodes -o json |jq -c 'paths' |grep -i xx
+
+# test internal services
+k run curl --image=alpine/curl --rm -it -- sh
+```
+
+
+## killer.sh
+7. show node and pod processes
+```bash
+# show nodes 
+kubectl top node
+# show pods and container processes
+kubectl top pod --containers=true
+```
+12. ensure only 1 pod runs on 1 node at a time via antiaffinity
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    id: very-important                  # change
+  name: deploy-important
+  namespace: project-tiger              # important
+spec:
+  replicas: 3                           # change
+  selector:
+    matchLabels:
+      id: very-important                # change
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        id: very-important              # change
+    spec:
+      containers:
+      - image: nginx:1.17.6-alpine
+        name: container1                # change
+        resources: {}
+      - image: kubernetes/pause         # add
+        name: container2                # add
+      affinity:                                             # add
+        podAntiAffinity:                                    # add
+          requiredDuringSchedulingIgnoredDuringExecution:   # add
+          - labelSelector:                                  # add
+              matchExpressions:                             # add
+              - key: id                                     # add
+                operator: In                                # add
+                values:                                     # add
+                - very-important                            # add
+            topologyKey: kubernetes.io/hostname             # add
+```
+14. get cluster info
+```bash
+# check service range 
+ssh controlplane-node
+cat /etc/kubernetes/manifests/kube-apiserver.yaml |grep -i range
+
+# get CNI plugin info
+cd /etc/cni/net.d/
+cat <file_name>.conflist
+
+# Which suffix will static pods have that run on cluster1-node1?
+-cluster1-node1
+```
+15. get events
+```bash
+# get events sort by metadata.creationTimestamp
+kubectl get events -A --sort-by=.metadata.creationTimestamp
+```
+16. get namespaced api-resources
+```bash
+kubectl api-resources --namespaced -o name
+# get count of roles
+k get roles --no-headers | wc -l
 ```
