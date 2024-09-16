@@ -9,3 +9,5 @@ K3s is a lightweight Kubernetes distribution that is easy to install and manage.
 ## Best practices
 ### standards
 - commit standards https://www.conventionalcommits.org/en/v1.0.0/
+### Github
+- Jira hyperlinks in Github https://chromewebstore.google.com/detail/github-jira-integration/faenbbkpfnklhncjianlfllkfekgghih
